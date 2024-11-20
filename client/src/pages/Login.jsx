@@ -26,45 +26,29 @@ const togglePasswordVisibility = () => {
     setPayload({ ...payload, [e.target.name]: e.target.value });
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //Original Code
-  //   try {
-  //     // Dispatch the login action and wait for it to complete
-  //     const result = await dispatch(loginUser({ email: payload.email, password: payload.password })); 
-  //     console.log({loginResult:result});
-      
-  //     if (loginUser.fulfilled.match(result)) {
-  //       // Login successful, navigate to the home page
-  //       // navigate('/');
-  //       window.location.href = "/";
-
-  //     } else if(loginUser.rejected.match(result)) {
-  //       // Login failed, handle the error
-  //       console.error('Login failed:', result);
-  //        }
-  //   } catch (error) {
-  //     console.error('An error occurred:', error);
-  //     }
-  // };
-  
-  //Improved code
   const handleSubmit = async (e) => {
     e.preventDefault();
+ // Original Code
     try {
-      const result = await dispatch(loginUser({ email: payload.email, password: payload.password }));
-  
-      if (result.type === 'user/loginUser/fulfilled') {
+      // Dispatch the login action and wait for it to complete
+      const result = await dispatch(loginUser({ email: payload.email, password: payload.password })); 
+      console.log({loginResult:result});
+      
+      if (loginUser.fulfilled.match(result)) {
         // Login successful, navigate to the home page
+        // navigate('/');
         window.location.href = "/";
-      } else if (result.type === 'user/loginUser/rejected') {
+
+      } else if(loginUser.rejected.match(result)) {
         // Login failed, handle the error
-        console.error('Login failed:', result.payload);
-      }
+        console.error('Login failed:', result);
+         }
     } catch (error) {
       console.error('An error occurred:', error);
-    }
+      }
   };
+  
+  
   
   
   useEffect(() => {

@@ -3,11 +3,13 @@ import footersection from "../css/Footer.module.css";
 import { Link, useNavigate } from "react-router-dom";
 import { FaMapLocationDot } from "react-icons/fa6";
 import { FaWhatsapp } from "react-icons/fa6";
-import { TbPhoneCall } from "react-icons/tb";
+// import { TbPhoneCall } from "react-icons/tb";
 import { FaFacebookF } from "react-icons/fa";
 import { FaInstagram } from "react-icons/fa";
 import { FaLinkedinIn } from "react-icons/fa6";
-import WebsiteCounter from "./WebsiteCounter";
+import Employee from "../pages/Employee"
+import Internship from "../pages/Internship";
+// import WebsiteCounter from "./WebsiteCounter";
 const Footer = () => {
   const navigate = useNavigate();
   return (
@@ -21,8 +23,8 @@ const Footer = () => {
             <div className={footersection.addressText}>
               <h1>OFFICE ADDRESS</h1>
               <p>
-                Khandolia Plaza, 118\C, Dabri - Palam Rd, Vaishali Colony,
-                Dashrath Puri, New Delhi, Delhi, 110045
+              F/F, H NO.99/12A, R/S NATHU RAM HOUSINGH COMPLEX, <br />
+              DABRI VILLAGE, New Delhi, South West Delhi, Delhi, 110045
               </p>
             </div>
           </div>
@@ -41,13 +43,13 @@ const Footer = () => {
             </div>
             <div className={footersection.addressText}>
               <h1>CONTACT - US</h1>
-              <p>sales@traincaapetech.info</p>
+              <p>sales@traincapetech.info</p>
               <p
                 onClick={() =>
-                  (window.location.href = "https://wa.me/+441253928501")
+                  (window.location.href = "https://wa.me/+916280281505")
                 }
               >
-                +44 1253 928501
+                +91 6280281505
               </p>
             </div>
           </div>
@@ -74,7 +76,10 @@ const Footer = () => {
               >
                 <FaFacebookF className={footersection.Socialicon} />
               </div>
-              <div className={footersection.SocailDiv}>
+              <div className={footersection.SocailDiv}
+                onClick= {()=>
+                  (window.location.href ="https://www.instagram.com/traincape_technology?igsh=MWR5c3EyOTI4dHJ5eg==")
+                }>
                 <FaInstagram className={footersection.Socialicon} />
               </div>
               <div
@@ -111,6 +116,7 @@ const Footer = () => {
             <Link to="/Career-details" className={footersection.linksfooter}>
               Career
             </Link>
+            { <Link to="/Employee" className={footersection.linksfooter}>Employee</Link> }
           </div>
           <div className={footersection.footerdiv}>
             <h1>Explore</h1>
@@ -123,6 +129,7 @@ const Footer = () => {
             <Link to="/Our-Blogs" className={footersection.linksfooter}>
               Latest Posts
             </Link>
+            { <Link to="/Internship" className={footersection.linksfooter}>Internship</Link> }
           </div>
           <div className={footersection.footerdiv}>
             <h1>Office Map</h1>

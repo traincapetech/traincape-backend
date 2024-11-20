@@ -55,6 +55,7 @@
 
 // export default AllRoute;
 
+// Updated by Saurav
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home";
@@ -74,6 +75,8 @@ import CompTIAsinglePage from "../pages/SinglePage/CompTIA/CompTIAsinglePage";
 import ReviewPage from "../pages/review/ReviewPage";
 import BookPage from "../pages/ebook/BookPage";
 import LandingPage from "../pages/landingPage/LandingPage";
+import Employee from "../pages/Employee";
+import Internship from "../pages/Internship";
 
 const AllRoute = () => {
   const token = localStorage.getItem("token");
@@ -101,9 +104,12 @@ const AllRoute = () => {
       <Route path="*" element={<PageNotFound />} />
       <Route path="/CompTIA-single-page" element={<CompTIAsinglePage />} />
       <Route path="/home" element={<LandingPage />} />
+      <Route path="/employee" element={<Employee/>} />
+      <Route path="/internship" element={<Internship/>} />
     </Routes>
   );
 };
 
 export default AllRoute;
 
+ 

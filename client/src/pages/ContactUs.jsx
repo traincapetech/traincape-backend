@@ -78,10 +78,10 @@ const ContactUs = () => {
               <FaWhatsapp className={contactus.icon} />
               <Link
                 className={contactus.link}
-                to="https://wa.me/+441253928501"
+                to="https://wa.me/+916280281505"
                 target="_blank"
               >
-                +44 1253928501
+                +91 6280281505
               </Link>
             </div>
             <div className={contactus.textdiv1}>
@@ -102,7 +102,7 @@ const ContactUs = () => {
             </div>
             <div className={contactus.textdiv}>
               <h2>Our Office Address</h2>
-              <p>118/C, Dabri - Palam Rd, Vaishali colony, Dashrath Puri,</p>
+              <p>F/F, H NO.99/12A, R/S NATHU RAM HOUSINGH COMPLEX, <br />DABRI VILLAGE, New Delhi, South West Delhi, Delhi, 110045</p>
             </div>
           </div>
           <div className={contactus.underlinediv}></div>

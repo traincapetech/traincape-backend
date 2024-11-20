@@ -295,7 +295,7 @@ const Home = () => {
           {/* <img src={hero} alt="Hero Image" /> */}
           <iframe
             className={home.vdo}
-            src="https://www.youtube.com/embed/cZjkxmzo1Xg?autoplay=1&loop=1&playlist=cZjkxmzo1Xg&controls=1"
+            src="https://www.youtube.com/embed/cZjkxmzo1Xg?autoplay=1&loop=1&playlist=cZjkxmzo1Xg&controls=1&mute=1"
             allow="autoplay; encrypted-media"
             allowFullScreen
             
@@ -326,10 +326,10 @@ const Home = () => {
               <p>24 HOURS SERVICE AVAILABLE</p>
               <h4
                 onClick={() =>
-                  (window.location.href = "https://wa.me/+441253928501")
+                  (window.location.href = "https://wa.me/+916280281505")
                 }
               >
-                Chat With Us: +44 1253 928501
+                Chat With Us: +91 6280281505
               </h4>
             </div>
           </div>
@@ -361,10 +361,10 @@ const Home = () => {
               <p>
                 Cloud services provide computing resources over the internet,
                 allowing users to access and use them on-demand without
-                maintaining the underlying infrastructure. These services offer
+                 maintaining the underlying infrastructure. These services offer
                 benefits such as cost optimization, scalability, accessibility,
                 reliability, and innovation. The main types are IaaS, PaaS, and
-                SaaS.
+                SaaS. 
               </p>
               <button
                 className={home.btn}

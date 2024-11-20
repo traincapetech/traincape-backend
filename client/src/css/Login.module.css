@@ -1,3 +1,4 @@
+/* Login.module.css */
 
 .wrapper {
     width: 100%;
@@ -12,9 +13,7 @@
     justify-content: center;
 }
 
-
-
-.LoginForm{
+.LoginForm {
     min-width: 300px;
     border-radius: 5px;
     color: #040000;
@@ -25,49 +24,45 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    /* padding: 50px 0px; */
     animation: parallax 4s ease-out infinite;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
 @keyframes parallax {
-    0%{
+    0% {
         background-size: 150%;
     }
-    50%{
+    50% {
         background-size: 170%;
     }
-    100%{
+    100% {
         background-size: 150%;
     }
 }
+
 .LoginForm h1 {
     font-size: 36px;
     text-align: center;
 }
 
-.LoginForm .inputBox {
+.inputBox {
     position: relative;
     width: 80%;
     height: 60px;
     margin: 10px 0;
 }
 
-
-
-
-   /* New code improved by Saurav Kumar */
-   .inputBox .icon {
+.icon {
     position: absolute;
     right: 10px;
     top: 25%;
     font-size: 36px;
     color: #6b6969;
-    cursor: pointer; /* Make the icon clickable */
-  }
-  
-  .inputBox input {
-    width: 90%;
+    cursor: pointer;
+}
+
+.inputBox input {
+    width: 100%;
     height: 100%;
     border: none;
     outline: none;
@@ -78,16 +73,15 @@
     font-size: 20px;
     font-weight: bold;
     font-family: "Poppins";
-  }
-  
-  .inputBox input::placeholder {
+}
+
+.inputBox input::placeholder {
     color: #1a1818;
     position: absolute;
     top: 35%;
-  }
-  
+}
 
-.RememberPassword  {
+.RememberPassword {
     width: 100%;
     margin: 0 auto;
     padding: 10px;
@@ -95,21 +89,20 @@
     align-items: center;
     justify-content: space-around;
 }
-.RememberPassword span{
+
+.RememberPassword span {
     position: relative;
     top: -6px;
 }
+
 .RememberPasswordText {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* margin-top: -10px; */
     margin-right: 150px;
-   
 }
 
-.RememberPassword input{
-    /* margin-left: 150px; */
+.RememberPassword input {
     width: 20px;
     height: 22px;
     margin-right: 10px;
@@ -139,18 +132,18 @@
     color: #333;
     font-weight: 700;
 }
-.LoginForm button:hover{
+
+.LoginForm button:hover {
     background: #9792ee;
     color: aliceblue;
     transition: background-color 1.9s ease;
 }
 
-.LoginForm .registerLink {
+.registerLink {
     font-size: 14.5px;
     text-align: center;
     margin: 20px 0 15px;
 }
-
 
 .registerLink p a {
     color: #0a0ef9;
@@ -162,15 +155,13 @@
     text-decoration: underline;
 }
 
-
-@media only screen and (min-width: 300px) and (max-width:600) {
-
-    .wrapper{
+@media only screen and (min-width: 300px) and (max-width: 600px) {
+    .wrapper {
         width: 50%;
         height: 100vh;
-    
     }
-.LoginForm{
-    width: 50%;
-}
+
+    .LoginForm {
+        width: 50%;
+    }
 }

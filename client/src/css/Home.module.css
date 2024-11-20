@@ -12,6 +12,7 @@
     width: 100%;
     height: 450px;
     object-fit: cover;
+    margin-bottom: 40px;
     /* position:relative; */
     /* color: black;  */
 }
@@ -22,15 +23,16 @@
     /* display: block; */
 }
 .bannerText{
-    max-width: 40%;
+    max-width: 50%;
     position: absolute;
-    top: 30%;
+    top: 20%;
     left: 1%;
     color: rgb(0, 0, 0);
     
 }
 .bannerText h1{
-    font-size: 25px;
+    font-size: 35px;
+    font-weight: 700;
     font-family: poppins;
     font-weight: bold;
 }
@@ -251,12 +253,14 @@
     font-family: poppins;
     font-weight: lighter;
     color: #555556; 
-    margin-top: 10px;
+    margin-top: 15px;
+    margin-bottom: 20px;
 }
 
 .call {
     display: flex;
     background: white;
+    align-items: center;
     border-radius: 10px;
     justify-content: space-around;
     align-items: center;
@@ -267,8 +271,8 @@
     font-family: poppins;
     font-weight: bold;
     color: #898787; 
-    margin-top: 15%;
-    margin-bottom: -4%;
+    margin-top: 10%;
+    margin-bottom: 4%;
 }
 
 .call img{
@@ -295,7 +299,7 @@
 }
 
 .herobtn:hover{
-    background: rgb(0, 0, 0);
+    background: rgb(207, 93, 93);
     color: white;
     transition: background-color 1.9s ease;
 
@@ -336,7 +340,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    padding: 0 15%;
+    padding: 0 11%;
     margin-top: 10%;
     margin-bottom: 10%;
 }
@@ -345,7 +349,9 @@
     padding: 40px;
     position: relative;
     box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-    padding-bottom: 70px;
+    padding-bottom: 40px;
+    width: 320px;
+    height: 550px;
 }
 .service:hover{
     box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
@@ -368,7 +374,7 @@
 
 .btn{
     position: absolute;
-    margin-top: 5%;
+    margin-top: 2%;
     bottom: 30px;
     left: 125px;
     height: 35px;
@@ -444,13 +450,14 @@
     justify-content: space-between;
     position: relative;
     align-items: stretch;
+    height: 500px;
     
 }
 .ladyIMG{
-    margin-top: -5%;
+    margin-top: -4%;
     width: 60%;
     height: 500px;
-    background-image: url(../assets/grayShade-BG.svg);
+    /* background-image: url(../assets/grayShade-BG.svg); */
     border-radius: 10px;
     margin-bottom: 10%;
 }
@@ -463,11 +470,11 @@
 }
 
 .helpText{
-    width: 40%;
-    height: 500px;
+    width: 50%;
+    height: 410px;
     position: absolute;
     left: 50%;
-    padding: 30px;
+    padding: 30px 50px;
     background-image: url(../assets/Blue-ShapeBG.svg); 
 }
 .helpTextDiv{
@@ -497,9 +504,11 @@
     justify-content: center;
     margin: auto;
     padding: 0px;
+    display: inline-flex;
+    align-items: center;
 }
 .ConnectingText{
-    width: 40%;
+    width: 30%;
     /* margin: 5%; */
 }
 .ConnectingText h2{
@@ -544,6 +553,17 @@
     border-radius: 5px;
 }
 
+.connectingImg{
+    width: 450px;
+    height: 450px;
+}
+
+.connectingImg img{
+    width: 450px;
+    height: 450px;
+}
+
+
  @media screen and (max-width: 800px) {
     .banner{
 
@@ -583,11 +603,11 @@
     .servicediv{
         max-width: 80%;
         position: relative;
-       margin-top:15px ;
+       margin-top:10px ;
        background: white;
        border-radius: 10px;
-       padding: 50px;
-       padding-bottom: 50px;
+       padding: 20px 15px;
+       /* padding-bottom: 50px; */
     }
 
     .readbtn{

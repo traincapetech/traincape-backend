@@ -37,6 +37,7 @@ const Slider = ({ height }) => {
     display: "flex",
     justifyContent: "center",
     height: height || "400px", // Use the height prop or default to 300px
+  
   };
 
   return (
