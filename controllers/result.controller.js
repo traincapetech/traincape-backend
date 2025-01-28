@@ -30,7 +30,7 @@ const addResult = async (req, res) => {
 
     const certificateId = uuidv4(); 
 
-    const certificateUrl = `http://localhost:8080/results/verifyCertificate?certificateId=${certificateId}`;
+    // const certificateUrl = `http://localhost:8080/results/verifyCertificate?certificateId=${certificateId}`;
 
     // Create and save the result (with level and certificate status)
     const newResult = new Result({
@@ -43,7 +43,7 @@ const addResult = async (req, res) => {
       level,
       certificate,  // Store certificate status
       certificateId,  // Store certificateId
-      certificateUrl, // Store certificateUrl
+      // certificateUrl, // Store certificateUrl
     });
 
     await newResult.save();
@@ -53,7 +53,7 @@ const addResult = async (req, res) => {
     res.status(201).json({
       message: 'Result saved successfully',
       result: newResult,
-      certificateUrl,
+      // certificateUrl,
     });
 
   } catch (err) {

@@ -11,4 +11,3 @@ module.exports = {
   connection,
 };
 console.log("MongoDB URI:", process.env.MongoDBURI);
-
