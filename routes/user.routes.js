@@ -105,6 +105,7 @@ userRouter.post("/sendOTPToEmail", async (req, res) => {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     user.verifyOtp = otp;
     user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+    await user.save();
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -127,15 +128,16 @@ userRouter.post("/sendOTPToEmail", async (req, res) => {
 `,
     };
 
-    transporter.sendMail(mailOptions, (error) => {
-      if (error) {
+    // Use Promise for better async handling
+    transporter
+      .sendMail(mailOptions)
+      .then(() => {
+        return res.json({ success: true, message: "OTP sent successfully" });
+      })
+      .catch((error) => {
+        console.error(error);
         return res.status(500).json({ message: "Error sending email" });
-      }
-      res.json({ message: "OTP sent to email" });
-    });
-    await user.save();
-    console.log(user);
-    res.json({ success: true, message: "OTP sent successfully" });
+      });
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: "Internal Server Error" });
@@ -161,7 +163,7 @@ userRouter.post("/verifyOtp", async (req, res) => {
     return res.json({ success: true, message: "Email verified successfully" });
   } catch (error) {
     console.error(error);
-    return res.json({ success: false, message: e.message });
+    return res.json({ success: false, message: error.message });
   }
 });
 
@@ -185,7 +187,7 @@ userRouter.post("/reset_password", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.json({ success: false, message: e.message });
+    return res.json({ success: false, message: error.message });
   }
 });
 export { userRouter };
