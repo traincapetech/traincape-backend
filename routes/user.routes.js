@@ -26,7 +26,9 @@ userRouter.post("/register", async (req, res) => {
     const existingUser = await UserModel.findOne({ email: email.trim() });
 
     if (existingUser) {
-      return res.status(400).send({ success: false, message: "Email already registered" });
+      return res
+        .status(400)
+        .send({ success: false, message: "Email already registered" });
     }
 
     bcrypt.hash(password, 5, async (err, hash) => {
@@ -59,11 +61,15 @@ userRouter.post("/login", async (req, res) => {
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(400).send({ success: false, message: "Wrong Credentials" });
+      return res
+        .status(400)
+        .send({ success: false, message: "Wrong Credentials" });
     }
     bcrypt.compare(password, user.password, (err, result) => {
       if (err || !result) {
-        return res.status(401).send({ success: false, message: "Wrong Credentials" });
+        return res
+          .status(401)
+          .send({ success: false, message: "Wrong Credentials" });
       }
       const token = jwt.sign(
         { userId: user._id, username: user.username },
@@ -94,18 +100,6 @@ userRouter.post("/sendOTPToEmail", async (req, res) => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-    tls: {
-      rejectUnauthorized: false,
-    },
-    debug: true,
-    logger: true,
-    pool: true,
-    maxConnections: 1,
-    maxMessages: 10,
-    rateLimit: 10,
-    timeout: 10000,
-    authMethod: "PLAIN",
-    
   });
   const { email } = req.body;
   try {
