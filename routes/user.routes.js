@@ -87,7 +87,8 @@ userRouter.post("/login", async (req, res) => {
 
 userRouter.post("/sendOTPToEmail", async (req, res) => {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    service: "smtp.hostinger.com",
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -101,7 +102,6 @@ userRouter.post("/sendOTPToEmail", async (req, res) => {
         .status(400)
         .send({ msg: "Email Id does not exist in the database" });
     }
-    console.log(email);
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     user.verifyOtp = otp;
     user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
@@ -174,7 +174,6 @@ userRouter.post("/reset_password", async (req, res) => {
     if (!user) {
       return res.status(400).send({ msg: "Wrong Credentials" });
     }
-    console.log("newPassword", newPassword);
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     user.resetOtp = "";
