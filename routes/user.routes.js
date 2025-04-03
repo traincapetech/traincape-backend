@@ -97,10 +97,9 @@ userRouter.post("/sendOTPToEmail", async (req, res) => {
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email Id does not exist in the database" 
-      });
+      return res
+        .status(400)
+        .send({ msg: "Email Id does not exist in the database" });
     }
     console.log(email);
     const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -109,27 +108,37 @@ userRouter.post("/sendOTPToEmail", async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
+      // to: email,
       subject: "Password Reset OTP",
       html: `
-      <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4;">
-        <div style="max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
-            <h2 style="color: #333;">OTP Verification</h2>
-            <p style="color: #555; font-size: 16px;">Your One-Time Password (OTP) for verification is:</p>
-            <div style="font-size: 24px; font-weight: bold; color: #333; padding: 10px 20px; background: #f8f8f8; border: 1px dashed #333; display: inline-block; margin: 10px 0;">
-                ${otp}
-            </div>
-            <p style="color: #777; font-size: 14px;">This OTP is valid for only 10 minutes. Do not share it with anyone.</p>
-            <p style="color: #777; font-size: 14px;">If you did not request this, please ignore this email.</p>
-            <div style="font-size: 12px; color: #aaa; margin-top: 20px;">© 2025 TrainCape Industries</div>
-        </div>
-      </div>`,
+      <!-- Updated HTML template with image -->
+<div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4;">
+  <div style="max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
+      <h2 style="color: #333;">OTP Verification</h2>
+      <p style="color: #555; font-size: 16px;">Your One-Time Password (OTP) for verification is:</p>
+      <div style="font-size: 24px; font-weight: bold; color: #333; padding: 10px 20px; background: #f8f8f8; border: 1px dashed #333; display: inline-block; margin: 10px 0;">
+          ${otp}
+      </div>
+      <p style="color: #777; font-size: 14px;">This OTP is valid for only 10 minutes. Do not share it with anyone.</p>
+      <p style="color: #777; font-size: 14px;">If you did not request this, please ignore this email.</p>
+      <div style="font-size: 12px; color: #aaa; margin-top: 20px;">© 2025 TrainCape Industries</div>
+  </div>
+</div>
+`,
     };
-    await transporter.sendMail(mailOptions);
+
+    transporter.sendMail(mailOptions, (error) => {
+      if (error) {
+        return res.status(500).json({ message: "Error sending email" });
+      }
+      res.json({ message: "OTP sent to email" });
+    });
     await user.save();
-    res.status(200).json({ success: true, message: "OTP sent successfully" });
+    console.log(user);
+    res.json({ success: true, message: "OTP sent successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: error.message });
+    res.json({ success: false, message: "Internal Server Error" });
   }
 });
 
@@ -138,7 +147,7 @@ userRouter.post("/verifyOtp", async (req, res) => {
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({ success: false, message: "Wrong Credentials" });
+      return res.status(400).send({ msg: "Wrong Credentials" });
     }
     if (user.verifyOtp !== otp || user.verifyOtp === "") {
       return res.json({ success: false, message: "Invalid OTP" });
@@ -147,12 +156,12 @@ userRouter.post("/verifyOtp", async (req, res) => {
       return res.json({ success: false, message: "OTP expired" });
     }
     user.verifyOtp = "";
-    user.verifyOtpExpireAt = 0;
+    user.verifyOTPExpireAt = 0;
     await user.save();
     return res.json({ success: true, message: "Email verified successfully" });
   } catch (error) {
     console.error(error);
-    return res.json({ success: false, message: error.message });
+    return res.json({ success: false, message: e.message });
   }
 });
 
@@ -161,7 +170,7 @@ userRouter.post("/reset_password", async (req, res) => {
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({ success: false, message: "Wrong Credentials" });
+      return res.status(400).send({ msg: "Wrong Credentials" });
     }
     console.log("newPassword", newPassword);
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -176,8 +185,7 @@ userRouter.post("/reset_password", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.json({ success: false, message: error.message });
+    return res.json({ success: false, message: e.message });
   }
 });
-
 export { userRouter };
