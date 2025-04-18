@@ -149,4 +149,10 @@ const startServer = async () => {
   }
 };
 
+// Enable CORS for your domain
+app.use(cors({
+  origin: 'https://traincapetech.in',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 startServer();
