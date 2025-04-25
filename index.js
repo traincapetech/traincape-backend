@@ -1,111 +1,4 @@
-// // const express = require("express");
-// // const cors = require("cors");
-// // const { connection } = require("./db");
 
-// // const { userRouter } = require("./routes/user.routes");
-// // const { reviewRouter } = require("./routes/review.routes");
-// // const { bookRouter } = require("./routes/book.routes");
-// // require("dotenv").config();
-
-// // const app = express();
-
-// // app.use(express.json());
-// // app.use(cors());
-
-// // app.use("/users", userRouter);
-// // app.use("/review", reviewRouter);
-// // app.use("/books", bookRouter);
-// // app.get("/", (req, res) => { 
-// //   res.status(200).send({
-// //     message: "This is our Homepage",
-// //   });
-// // });
-
-// // app.listen(process.env.PORT, async () => {
-// //   try {
-// //     await connection;
-// //     console.log("Connected to MongoDB");
-// //     console.log(`Server is running on port ${process.env.PORT}`);
-// //   } catch (error) {
-// //     console.log(error);
-// //   }
-// // });
-// // Updated by saurav
-// // index.js
-// const express = require("express");
-// const cors = require("cors");
-// const { connection } = require("./db");
-
-// const { userRouter } = require("./routes/user.routes");
-// const { reviewRouter } = require("./routes/review.routes");
-// const { bookRouter } = require("./routes/book.routes");
-// const { questionRouter } = require("./routes/question.routes"); 
-// const { resultRouter } = require("./routes/result.routes");
-
-// require("dotenv").config();
-
-// const app = express();
-
-// app.use(express.json());
-// app.use(cors());
-
-// app.use("/questions", questionRouter);  
-// app.use("/results", resultRouter);  // Add the resultRouter here
-// app.use("/users", userRouter);
-// app.use("/review", reviewRouter);
-// app.use("/books", bookRouter);
-
-// app.get("/", (req, res) => { 
-//   res.status(200).send({
-//     message: "This is our Homepage",
-//   });
-// });
-
-// app.listen(process.env.PORT, async () => {
-//   try {
-//     await connection;
-//     console.log("Connected to MongoDB");
-//     console.log(`Server is running on port ${process.env.PORT}`);
-//   } catch (error) {
-//     console.log("Error connecting to MongoDB:", error);
-//   }
-// });
-
-
-// const express = require("express");
-// const cors = require("cors");
-// const { connection } = require("./db");
-
-// const { userRouter } = require("./routes/user.routes");
-// const { reviewRouter } = require("./routes/review.routes");
-// const { bookRouter } = require("./routes/book.routes");
-// require("dotenv").config();
-
-// const app = express();
-
-// app.use(express.json());
-// app.use(cors());
-
-// app.use("/users", userRouter);
-// app.use("/review", reviewRouter);
-// app.use("/books", bookRouter);
-// app.get("/", (req, res) => { 
-//   res.status(200).send({
-//     message: "This is our Homepage",
-//   });
-// });
-
-// app.listen(process.env.PORT, async () => {
-//   try {
-//     await connection;
-//     console.log("Connected to MongoDB");
-//     console.log(`Server is running on port ${process.env.PORT}`);
-//   } catch (error) {
-//     console.log(error);
-//   }
-// });
-// Updated by saurav
-// index.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -115,13 +8,14 @@ import { reviewRouter } from "./routes/review.routes.js";
 import { bookRouter } from "./routes/book.routes.js";
 import { questionRouter } from "./routes/question.routes.js"; 
 import { resultRouter } from "./routes/result.routes.js";
+import { paymentRouter } from "./routes/payment.routes.js";
 
-dotenv.config();
+dotenv.config(); 
 
 const app = express();
 
 const corsOptions = {
-  origin: 'https://traincapetech.in',
+  origin: ['https://traincapetech.in','http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
@@ -134,12 +28,14 @@ app.use("/results", resultRouter);
 app.use("/users", userRouter);
 app.use("/review", reviewRouter);
 app.use("/books", bookRouter);
+app.use("/payments", paymentRouter);
 
 app.get("/", (req, res) => { 
   res.status(200).send({
     message: "This is our Homepage",
   });
 });
+
 
 const PORT = process.env.PORT || 8080;
 

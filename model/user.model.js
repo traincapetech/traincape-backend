@@ -1,5 +1,24 @@
 import mongoose from "mongoose";
 
+const transactionSchema = new mongoose.Schema({
+  type: String,
+  amount: Number,
+  date: Date,
+  status: String,
+  paymentMethod: String,
+  transactionId: String,
+  stripeSessionId: String,
+  metadata: Object,
+});
+// Course Purchase Schema
+const courseSchema = new mongoose.Schema(
+  {
+    courseId: String,
+    purchaseDate: { type: Date, required: true },
+    amountPaid: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
 const userSchema = mongoose.Schema(
   {
     username: { type: String, required: true },
@@ -25,7 +44,9 @@ const userSchema = mongoose.Schema(
     verifyOtp: { type: String, default: "" },
     verifyOtpExpireAt: { type: Number, default: 0 },
     resetOtp: { type: String, default: "" },
-    resetOtpExpireAt: { type: Number, default: 0 }
+    resetOtpExpireAt: { type: Number, default: 0 },
+    transactions: [transactionSchema],
+    courses: [courseSchema],
   },
   {
     versionKey: false,

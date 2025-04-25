@@ -1,16 +1,9 @@
 import express from "express";
 import { BookModel } from "../model/book.model.js";
-
+import { getAllBooks } from "../controllers/book.controller.js";
 const bookRouter = express.Router();
 
-bookRouter.get("/allBooks", async (req, res) => {
-  try {
-    const books = await BookModel.find();
-    res.send(books);
-  } catch (error) {
-    res.send(error);
-  }
-});
+bookRouter.get("/get-books", getAllBooks);
 
 bookRouter.post("/create", async (req, res) => {
   const payload = req.body;

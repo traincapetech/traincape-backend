@@ -196,4 +196,20 @@ userRouter.post("/reset_password", async (req, res) => {
     return res.json({ success: false, message: error.message });
   }
 });
+userRouter.get("/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).send({ msg: "User not found" });
+    }
+    // user.transactions = [];
+    // user.courses = [];
+    await user.save();
+    res.status(200).send({ success: true, user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ success: false, message: error.message });
+  }
+});
 export { userRouter };
