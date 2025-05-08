@@ -182,6 +182,8 @@ userRouter.post("/reset_password", async (req, res) => {
       return res.status(400).send({ msg: "Wrong Credentials" });
     }
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+    console.log("Hashed Password is",hashedPassword);
+    console.log("User Password is",user.password);
     user.password = hashedPassword;
     user.resetOtp = "";
     user.resetOtpExpireAt = 0;
@@ -196,20 +198,18 @@ userRouter.post("/reset_password", async (req, res) => {
     return res.json({ success: false, message: error.message });
   }
 });
-userRouter.get("/:email", async (req, res) => {
-  const { email } = req.params;
+userRouter.get("/details", async (req, res) => {
+  const useremail="ishaanj2612@gmail.com"
   try {
-    const user = await UserModel.findOne({ email });
+    const user = await UserModel.findOne({ email:useremail });
     if (!user) {
-      return res.status(404).send({ msg: "User not found" });
+      return res.status(400).send({ msg: "Wrong Credentials" });
     }
-    // user.transactions = [];
-    // user.courses = [];
-    await user.save();
-    res.status(200).send({ success: true, user });
+  
+    res.status(200).send(user);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 });
 export { userRouter };

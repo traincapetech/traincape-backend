@@ -32,9 +32,10 @@ const employeeSchema = new mongoose.Schema(
       type: String,
     },
     photo: {
-      // data: { type: Buffer, required: true }, // Specify `required` for data
-      // contentType: { type: String, required: true }, // Specify `required` for contentType
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     // Educational and professional details
     collegeName: {
@@ -42,45 +43,53 @@ const employeeSchema = new mongoose.Schema(
       required: false,
     },
     tenthMarksheet: {
-      // data: { type: Buffer, required: true }, // Specify `required` for data
-      // contentType: { type: String, required: true }, // Specify `required` for contentType
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     twelfthMarksheet: {
-      // data: { type: Buffer, required: true }, // Specify `required` for data
-      // contentType: { type: String, required: true }, // Specify `required` for contentType
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     bachelorsCertificate: {
-      // data: { type: Buffer, required: false },
-      // contentType: { type: String, required: false },
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     pgCertificate: {
-      // data: { type: Buffer, required: false },
-      // contentType: { type: String, required: false },
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     // Documents
     aadharCard: {
-      // data: { type: Buffer, required: false },
-      // contentType: { type: String, required: false },
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     panCard: {
-      // data: { type: Buffer, required: false },
-      // contentType: { type: String, required: false },
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     policeClearance: {
-      // data: { type: Buffer, required: false },
-      // contentType: { type: String, required: false },
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     resume: {
-      // data: { type: Buffer, required: false },
-      // contentType: { type: String, required: false },
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
     // Employment details
     role: {
@@ -105,9 +114,10 @@ const employeeSchema = new mongoose.Schema(
       required: false,
     },
     offerLetter: {
-      // data: { type: Buffer, required: false },
-      // contentType: { type: String, required: false },
-      type: Object,
+      data: { type: Buffer },
+      contentType: { type: String },
+      filename: { type: String },
+      size: { type: Number }
     },
   },
   { timestamps: true }

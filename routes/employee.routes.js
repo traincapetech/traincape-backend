@@ -6,7 +6,10 @@ import {
   deleteEmployee,
   getDatabyEmployeeId,
   updateEmployee,
+  // getEmployeeFile,
+  // updateEmployeeFiles,
 } from "../controllers/employee.controller.js";
+
 import { upload } from "../middleware/multer.middleware.js";
 
 const employeeRouter = express.Router();
@@ -17,12 +20,39 @@ employeeRouter.get("/getEmployees", getEmployees);
 
 employeeRouter.post(
   "/addEmployee",
-  upload.any(),
+  upload.fields([
+    { name: "photo" },
+    { name: "resume" },
+    { name: "tenthMarksheet" },
+    { name: "twelfthMarksheet" },
+    { name: "bachelorsCertificate" },
+    { name: "pgCertificate" },
+    { name: "aadharCard" },
+    { name: "panCard" },
+    { name: "policeClearance" },
+    { name: "offerLetter" },
+  ]),
   addEmployee
 );
 
+employeeRouter.put(
+  "/updateEmployee/:employeeId",
+  upload.fields([
+    { name: "photo" },
+    { name: "resume" },
+    { name: "tenthMarksheet" },
+    { name: "twelfthMarksheet" },
+    { name: "bachelorsCertificate" },
+    { name: "pgCertificate" },
+    { name: "aadharCard" },
+    { name: "panCard" },
+    { name: "policeClearance" },
+    { name: "offerLetter" },
+  ]),
+  updateEmployee
+);
 employeeRouter.delete("/deleteEmployee/:employeeId", deleteEmployee);
-employeeRouter.put("/updateEmployee/:employeeId", updateEmployee);
-employeeRouter.get("/getEmployee/:employeeId", getDatabyEmployeeId);
+
+employeeRouter.get("/getEmployee/:id", getDatabyEmployeeId);
 
 export { employeeRouter };
