@@ -15,13 +15,39 @@ import certificateRouter from "./routes/certificate.routes.js"; // ✅ NEW
 
 dotenv.config();
 
+// ✅ Check for required environment variables
+if (!process.env.SECRET_KEY) {
+  console.error("❌ CRITICAL ERROR: SECRET_KEY environment variable is not set!");
+  console.error("Please create a .env file with SECRET_KEY=your-secret-key");
+  process.exit(1);
+}
+
 const app = express();
 
-// ✅ CORS Configuration
+// ✅ Enhanced CORS Configuration
 const corsOptions = {
-  origin: ['https://traincapetech.in', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://traincapetech.in',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
 
 app.use(cors(corsOptions));
@@ -56,6 +82,7 @@ const startServer = async () => {
     await connectDB();
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`Using FRONTEND_URL for payment redirects: ${process.env.FRONTEND_URL || 'Not set'}`);
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error);

@@ -71,6 +71,15 @@ userRouter.post("/login", async (req, res) => {
           .status(401)
           .send({ success: false, message: "Wrong Credentials" });
       }
+      
+      // Check if SECRET_KEY is available
+      if (!process.env.SECRET_KEY) {
+        console.error("SECRET_KEY environment variable is not set!");
+        return res
+          .status(500)
+          .send({ success: false, message: "Server configuration error" });
+      }
+      
       const token = jwt.sign(
         { userId: user._id, username: user.username },
         process.env.SECRET_KEY,
@@ -87,6 +96,7 @@ userRouter.post("/login", async (req, res) => {
       });
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).send({ success: false, message: error.message });
   }
 });
