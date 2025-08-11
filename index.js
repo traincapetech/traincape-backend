@@ -11,7 +11,7 @@ import { questionRouter } from "./routes/question.routes.js";
 import { resultRouter } from "./routes/result.routes.js";
 import { paymentRouter } from "./routes/payment.routes.js";
 import { employeeRouter } from "./routes/employee.routes.js";
-import certificateRouter from "./routes/certificate.routes.js"; // ✅ NEW
+import certificateRouter from "./routes/certificate.routes.js";
 
 dotenv.config();
 
@@ -65,7 +65,7 @@ app.use("/users", userRouter);
 app.use("/review", reviewRouter);
 app.use("/books", bookRouter);
 app.use("/payments", paymentRouter);
-app.use("/certificates", certificateRouter); // ✅ NEW ROUTE
+app.use("/certificates", certificateRouter);
 
 // ✅ Home Endpoint
 app.get("/", (req, res) => {
