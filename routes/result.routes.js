@@ -26,7 +26,6 @@ resultRouter.post("/add", async (req, res) => {
       certificate: certificateFromClient
     } = req.body;
 
-    // Compute certificate if not provided
     const certificateComputed = typeof certificateFromClient === 'boolean'
       ? certificateFromClient
       : (typeof score === 'number' && typeof totalQuestions === 'number')
@@ -34,8 +33,8 @@ resultRouter.post("/add", async (req, res) => {
         : false;
 
     const resultDoc = new ResultModel({
-      name,
-      email,
+      name: name || 'Anonymous',
+      email: email || 'unknown@traincape',
       course,
       subTopic,
       score,
@@ -48,7 +47,7 @@ resultRouter.post("/add", async (req, res) => {
     await resultDoc.save();
     res.status(201).send({ msg: "Result added successfully", result: resultDoc });
   } catch (error) {
-    res.status(400).send({ error: error.message });
+    res.status(400).send({ success: false, message: error.message });
   }
 });
 
@@ -65,9 +64,9 @@ resultRouter.post("/addResult", async (req, res) => {
       level
     } = req.body;
 
-    if (!name || !email || !course || !subTopic ||
-        typeof score !== 'number' || typeof totalQuestions !== 'number' || !level) {
-      return res.status(400).json({ error: "Missing required fields" });
+    // Validate core fields
+    if (!course || !subTopic || typeof score !== 'number' || typeof totalQuestions !== 'number' || !level) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
     const passingScore = 0.7 * totalQuestions;
@@ -75,8 +74,8 @@ resultRouter.post("/addResult", async (req, res) => {
     const certificateId = uuidv4();
 
     const newResult = new ResultModel({
-      name,
-      email,
+      name: name || 'Anonymous',
+      email: email || 'unknown@traincape',
       course,
       subTopic,
       score,
@@ -89,11 +88,12 @@ resultRouter.post("/addResult", async (req, res) => {
     await newResult.save();
 
     res.status(201).json({
+      success: true,
       message: 'Result saved successfully',
       result: newResult,
     });
   } catch (error) {
-    res.status(500).json({ error: 'Error saving result', message: error.message });
+    res.status(500).json({ success: false, message: error.message || 'Error saving result' });
   }
 });
 
