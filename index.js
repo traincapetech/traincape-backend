@@ -12,6 +12,7 @@ import { resultRouter } from "./routes/result.routes.js";
 import { paymentRouter } from "./routes/payment.routes.js";
 import { employeeRouter } from "./routes/employee.routes.js";
 import certificateRouter from "./routes/certificate.routes.js";
+import voucherRouter from "./routes/voucher.routes.js";
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use("/review", reviewRouter);
 app.use("/books", bookRouter);
 app.use("/payments", paymentRouter);
 app.use("/certificates", certificateRouter);
+app.use("/vouchers", voucherRouter);
 
 // ✅ Home Endpoint
 app.get("/", (req, res) => {
@@ -76,7 +78,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Server Bootstrap
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3001;
 
 const startServer = async () => {
   try {

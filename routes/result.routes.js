@@ -29,7 +29,7 @@ resultRouter.post("/add", async (req, res) => {
     const certificateComputed = typeof certificateFromClient === 'boolean'
       ? certificateFromClient
       : (typeof score === 'number' && typeof totalQuestions === 'number')
-        ? score >= 0.7 * totalQuestions
+        ? score >= 0.8 * totalQuestions
         : false;
 
     const resultDoc = new ResultModel({
@@ -69,7 +69,7 @@ resultRouter.post("/addResult", async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    const passingScore = 0.7 * totalQuestions;
+    const passingScore = 0.8 * totalQuestions;
     const certificate = score >= passingScore;
     const certificateId = uuidv4();
 

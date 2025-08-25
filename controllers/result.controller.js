@@ -25,7 +25,7 @@ const addResult = async (req, res) => {
     }
 
     // Determine if the user should receive a certificate (assuming 70% score required)
-    const passingScore = 0.7 * totalQuestions; // 70% of the total questions
+    const passingScore = 0.8 * totalQuestions; // 80% of the total questions
     const certificate = score >= passingScore;
 
     const certificateId = uuidv4(); 
