@@ -1,0 +1,24 @@
+Using FRONTEND_URL for payment redirects: https://traincapetech.in
+MongoDB Connected: ac-butgdfx-shard-00-02.1p6rbwq.mongodb.net
+node:events:485
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::8080
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at app.listen (/Users/a/Desktop/Traincape-Technology-main/Traincape_/server/node_modules/express/lib/application.js:635:24)
+    at startServer (file:///Users/a/Desktop/Traincape-Technology-main/Traincape_/server/index.js:86:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 8080
+}
+
+Node.js v24.2.0
