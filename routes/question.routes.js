@@ -3,6 +3,37 @@ import { QuestionModel } from "../model/question.model.js";
 import mongoose from "mongoose";
 const questionRouter = express.Router();
 
+// Disable caching for all question routes to avoid stale 304 responses
+questionRouter.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
+
+// Helper utils
+const normalize = (value) =>
+  (value || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
+const escapeRegex = (str = "") => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const normalizeLevel = (value) => (value || "").toString().trim().toLowerCase();
+const normalizeLoose = (value) =>
+  (value || "")
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+const normalizeComparable = (value) =>
+  (value || "")
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .replace(/and/g, "");
+
 // Debug route to check database
 questionRouter.get("/debug", async (req, res) => {
   try {
@@ -55,7 +86,7 @@ questionRouter.get("/", async (req, res) => {
     
     // If course is specified, return questions for that course
     if (course && !subTopic) {
-      const foundCourse = await QuestionModel.findOne({ name: course });
+      const foundCourse = await QuestionModel.findOne({ name: { $regex: `^${escapeRegex(course)}$`, $options: "i" } });
       if (!foundCourse) {
         return res.status(200).json([]);
       }
@@ -88,7 +119,7 @@ questionRouter.get("/", async (req, res) => {
       }
       
       const subTopicQuestions = [];
-      const matchedSubTopic = foundCourse.subTopics.find(sub => sub.name === subTopic);
+      const matchedSubTopic = foundCourse.subTopics.find(sub => normalize(sub.name) === normalize(subTopic));
       if (matchedSubTopic) {
         const levelsObj = matchedSubTopic.levels.toObject();
         Object.keys(levelsObj).forEach(level => {
@@ -108,28 +139,36 @@ questionRouter.get("/", async (req, res) => {
       return res.status(200).json(subTopicQuestions);
     }
     
-    // If all parameters are specified, filter by level
+    // If all parameters are specified, filter by level (case-insensitive)
     if (course && subTopic && level) {
-      const foundCourse = await QuestionModel.findOne({ name: course });
+      const foundCourse = await QuestionModel.findOne({ name: { $regex: `^${escapeRegex(course)}$`, $options: "i" } });
       if (!foundCourse) {
         return res.status(200).json([]);
       }
       
-      const matchedSubTopic = foundCourse.subTopics.find(sub => sub.name === subTopic);
+      let matchedSubTopic = foundCourse.subTopics.find(sub => {
+        if (normalize(sub.name) === normalize(subTopic)) return true;
+        return normalizeLoose(sub.name) === normalizeLoose(subTopic);
+      });
+      if (!matchedSubTopic) {
+        matchedSubTopic = foundCourse.subTopics.find(sub => normalizeComparable(sub.name) === normalizeComparable(subTopic));
+      }
       if (!matchedSubTopic) {
         return res.status(200).json([]);
       }
       
       const levelsObj = matchedSubTopic.levels.toObject();
-      if (!levelsObj[level]) {
+      const requestedLevel = normalizeLevel(level);
+      const levelKey = Object.keys(levelsObj).find((k) => k.toLowerCase() === requestedLevel);
+      if (!levelKey || !Array.isArray(levelsObj[levelKey])) {
         return res.status(200).json([]);
       }
       
-      const levelQuestions = levelsObj[level].map(question => ({
+      const levelQuestions = levelsObj[levelKey].map(question => ({
         ...(question.toObject ? question.toObject() : question),
         course: course,
         subTopic: subTopic,
-        level: level
+        level: levelKey
       }));
       
       return res.status(200).json(levelQuestions);
@@ -153,17 +192,54 @@ questionRouter.get("/getQuestions", async (req, res) => {
       });
     }
 
-    // Step 1: Fetch questions by course name
-    const questions = await QuestionModel.find({ name: course });
+    // Step 1: Fetch questions by course name (case-insensitive)
+    const questions = await QuestionModel.find({
+      name: { $regex: `^${escapeRegex(course)}$`, $options: "i" },
+    });
 
     // Step 2: Filter questions by subTopic name
     const matchingSubTopics = [];
+    const requestedSubTopic = normalize(subTopic);
+    const requestedSubTopicLoose = normalizeLoose(subTopic);
+    const requestedLevel = normalizeLevel(level);
+
+    // Debug logs to trace matching in non-production environments
+    try {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("[getQuestions] params:", { course, subTopic, level });
+        console.log("[getQuestions] found courses:", questions.map(q => q.name));
+      }
+    } catch (_) {}
 
     questions.forEach((question) => {
-      const matched = question.subTopics
-        .filter((sub) => sub.name === subTopic)
-        .flatMap((sub) => sub.levels[level] || []);
-      matchingSubTopics.push(...matched);
+      let subs = question.subTopics.filter((sub) => {
+        const n1 = normalize(sub.name);
+        if (n1 === requestedSubTopic) return true;
+        return normalizeLoose(sub.name) === requestedSubTopicLoose;
+      });
+      if (subs.length === 0) {
+        const requestedComparable = normalizeComparable(subTopic);
+        subs = question.subTopics.filter((sub) => normalizeComparable(sub.name) === requestedComparable);
+      }
+      subs.forEach((sub) => {
+        const levelsObj = sub.levels.toObject ? sub.levels.toObject() : sub.levels;
+        try {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log("[getQuestions] subtopic match:", sub.name, "level keys:", Object.keys(levelsObj));
+          }
+        } catch (_) {}
+        if (requestedLevel) {
+          const keyMatch = Object.keys(levelsObj).find((k) => k.toLowerCase() === requestedLevel);
+          if (keyMatch && Array.isArray(levelsObj[keyMatch])) {
+            matchingSubTopics.push(...levelsObj[keyMatch]);
+          }
+        } else {
+          // If level not provided, return all levels combined
+          Object.keys(levelsObj).forEach((k) => {
+            if (Array.isArray(levelsObj[k])) matchingSubTopics.push(...levelsObj[k]);
+          });
+        }
+      });
     });
 
     // Step 3: Send response

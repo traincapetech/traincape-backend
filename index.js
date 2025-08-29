@@ -57,6 +57,9 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json());
 
+// ✅ Disable ETag to avoid 304 stale responses for dynamic content
+app.set('etag', false);
+
 // ✅ Static Files
 app.use("/uploads", express.static("uploads"));
 

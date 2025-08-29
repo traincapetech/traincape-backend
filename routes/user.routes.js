@@ -81,7 +81,7 @@ userRouter.post("/login", async (req, res) => {
       }
       
       const token = jwt.sign(
-        { userId: user._id, username: user.username },
+        { userId: user._id, username: user.username, role: user.role },
         process.env.SECRET_KEY,
         { expiresIn: "1h" }
       );
@@ -208,6 +208,17 @@ userRouter.post("/reset_password", async (req, res) => {
     return res.json({ success: false, message: error.message });
   }
 });
+// Get all users (for admin dashboard)
+userRouter.get("/", async (req, res) => {
+  try {
+    const users = await UserModel.find({}, { password: 0, verifyOtp: 0, verifyOtpExpireAt: 0 });
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
 userRouter.get("/details", async (req, res) => {
   const useremail="ishaanj2612@gmail.com"
   try {
