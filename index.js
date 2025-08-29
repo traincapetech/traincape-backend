@@ -36,6 +36,7 @@ const corsOptions = {
       'https://traincapetech.in',
       'https://www.traincapetech.in',
       'http://localhost:3000',
+      'http://localhost:5173',
       'http://localhost:3001',
       'http://127.0.0.1:3000'
     ];
@@ -55,6 +56,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+// For webhooks we need raw body; apply conditionally for the webhook route
+app.post('/payments/stripe/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
 // ✅ Disable ETag to avoid 304 stale responses for dynamic content

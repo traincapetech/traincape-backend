@@ -1,5 +1,6 @@
 import { UserModel } from "../../../model/user.model.js";
 import Stripe from "stripe";
+import voucherController from "../../voucher.controller.js";
 
 const stripe = new Stripe(
   process.env.STRIPE_SK,
@@ -50,6 +51,7 @@ const StripePayment = async (req, res) => {
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
+      currency: lineItems[0]?.price_data?.currency || 'usd',
       success_url: `${success_url}?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(
         email
       )}`,
@@ -226,4 +228,59 @@ const StripePaymentSuccess = async (req, res) => {
   }
 };
 
-export { StripePayment, StripePaymentSuccess };
+// Webhook handler with signature verification
+const StripeWebhook = async (req, res) => {
+  try {
+    const sig = req.headers['stripe-signature'];
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!endpointSecret) {
+      return res.status(500).send('Webhook secret not configured');
+    }
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(req.rawBody || req.bodyRaw || req.body, sig, endpointSecret);
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const email = session?.metadata?.userEmail;
+      const paymentIntentId = session.payment_intent;
+
+      // Mark user transaction complete (best-effort)
+      if (email) {
+        try {
+          const user = await UserModel.findOne({ email });
+          if (user) {
+            const tx = user.transactions?.find(t => t.stripeSessionId === session.id || t.transactionId === session.metadata?.transactionId);
+            if (tx && tx.status !== 'completed') {
+              tx.status = 'completed';
+              tx.completedAt = new Date();
+              tx.stripePaymentIntent = paymentIntentId;
+            }
+            await user.save();
+          }
+        } catch (_) {}
+      }
+
+      // If vouchers are bought via direct voucher API, finalize email sending here if metadata contains purchaseId
+      const rawProducts = session.metadata?.productMetadata;
+      if (rawProducts) {
+        try {
+          const items = JSON.parse(rawProducts);
+          // No per-item purchaseId here; voucher fulfillment handled by existing flow
+        } catch (_) {}
+      }
+    }
+
+    res.json({ received: true });
+  } catch (error) {
+    console.error('Webhook handler error:', error);
+    res.status(500).send('Webhook handler error');
+  }
+};
+
+export { StripePayment, StripePaymentSuccess, StripeWebhook };

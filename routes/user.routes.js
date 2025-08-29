@@ -57,7 +57,19 @@ userRouter.post("/register", async (req, res) => {
 });
 
 userRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  // Support both Basic Auth header and JSON body
+  let { email, password } = req.body || {};
+  const authHeader = req.headers.authorization || "";
+  if (authHeader.startsWith("Basic ")) {
+    try {
+      const decoded = Buffer.from(authHeader.split(" ")[1], "base64").toString("utf8");
+      const [username, pass] = decoded.split(":");
+      if (username && pass) {
+        email = username;
+        password = pass;
+      }
+    } catch (_) {}
+  }
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
@@ -92,6 +104,7 @@ userRouter.post("/login", async (req, res) => {
         user: {
           username: user.username,
           email: user.email,
+          role: user.role,
         },
       });
     });
