@@ -1,13 +1,19 @@
 import { UserModel } from "../../../model/user.model.js";
 import Stripe from "stripe";
-import voucherController from "../../voucher.controller.js";
+import Voucher from "../../../model/voucher.model.js";
+import VoucherBatch from "../../../model/voucherBatch.model.js";
+import VoucherPurchase from "../../../model/voucherPurchase.model.js";
+import { sendVoucherEmail } from "../../../utils/email.js";
 
-const stripe = new Stripe(
-  process.env.STRIPE_SK,
-  {
-    apiVersion: "2023-10-16",
-  }
-);
+// Resolve Stripe secret from multiple possible env names
+const STRIPE_SECRET_KEY = process.env.STRIPE_SK || process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET;
+
+let stripe;
+if (!STRIPE_SECRET_KEY) {
+  console.error("❌ STRIPE secret key is not set. Please set STRIPE_SK or STRIPE_SECRET_KEY.");
+} else {
+  stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" });
+}
 
 // Get the frontend URL with better fallback handling
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://traincapetech.in";
@@ -18,6 +24,9 @@ console.log("Using FRONTEND_URL for payment redirects:", FRONTEND_URL);
 const StripePayment = async (req, res) => {
   const { lineItems, success_url, cancel_url, email, productIds } = req.body;
   try {
+    if (!stripe) {
+      return res.status(500).json({ success: false, message: "Stripe is not configured on the server. Set STRIPE_SK or STRIPE_SECRET_KEY." });
+    }
     if (!email) {
       return res.status(400).json({
         success: false,
@@ -30,6 +39,27 @@ const StripePayment = async (req, res) => {
         success: false,
         message: "User not found with this email",
       });
+    }
+
+    // Validate voucher inventory against requested productIds
+    if (Array.isArray(productIds) && productIds.length > 0) {
+      const requested = {};
+      for (const pid of productIds) {
+        if (typeof pid === 'string' && pid.startsWith('voucher-')) {
+          const parts = pid.split('-');
+          const course = parts[1] || '';
+          const subCourse = parts.slice(2).join('-') || '';
+          const key = `${course}__${subCourse}`;
+          requested[key] = (requested[key] || 0) + 1;
+        }
+      }
+      for (const key of Object.keys(requested)) {
+        const [course, subCourse] = key.split('__');
+        const availableCount = await (await import('../../../model/voucher.model.js')).default.countDocuments({ course, subCourse, status: 'available' });
+        if (availableCount < requested[key]) {
+          return res.status(400).json({ success: false, message: `Insufficient vouchers for ${course} ${subCourse}. Available ${availableCount}, requested ${requested[key]}` });
+        }
+      }
     }
 
     const totalInCents = lineItems.reduce((sum, item) => {
@@ -207,16 +237,75 @@ const StripePaymentSuccess = async (req, res) => {
       });
     }
 
+    // Voucher email fallback (if webhook not configured)
+    try {
+      const rawProducts = session.metadata?.productMetadata;
+      if (rawProducts) {
+        const existing = await VoucherPurchase.findOne({ 'payment.stripePaymentIntentId': session.payment_intent });
+        if (!existing) {
+          const items = JSON.parse(rawProducts);
+          for (const item of items) {
+            const productId = item.productId || '';
+            if (!productId.startsWith('voucher-')) continue;
+            const parts = productId.split('-');
+            const course = parts[1] || '';
+            const subCourse = parts.slice(2).join('-') || '';
+
+            const voucher = await Voucher.findOneAndUpdate(
+              { course, subCourse, status: 'available' },
+              { $set: { status: 'sold', soldAt: new Date(), soldTo: { name: user.username || email, email } } },
+              { new: true }
+            );
+            if (!voucher) continue;
+
+            const batch = await VoucherBatch.findOne({ batchId: voucher.batchId });
+            if (batch) {
+              batch.availableVouchers = Math.max(0, (batch.availableVouchers || 1) - 1);
+              batch.soldVouchers = (batch.soldVouchers || 0) + 1;
+              if (batch.availableVouchers === 0) batch.status = 'depleted';
+              await batch.save();
+            }
+
+            const purchaseId = `PURCHASE_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
+            const vp = new VoucherPurchase({
+              purchaseId,
+              voucherCode: voucher.voucherCode,
+              course,
+              subCourse,
+              customer: { name: user.username || email, email },
+              payment: { amount: Number(item.amount) || Number(session.amount_total/100) || 0, currency: (session.currency || 'usd').toUpperCase(), status: 'completed', stripePaymentIntentId: session.payment_intent }
+            });
+            await vp.save();
+
+            try {
+              await sendVoucherEmail(email, { name: user.username || email, voucherCode: voucher.voucherCode, course, subCourse, purchaseId });
+              vp.emailSent = true; vp.emailSentAt = new Date(); await vp.save();
+            } catch (_) {}
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Voucher fulfillment fallback failed:', e.message);
+    }
+
     // // Get the updated user data
     const updatedUser = await UserModel.findOne({ email });
     const updatedTransaction = updatedUser.transactions.find(
       (t) => t.transactionId === transaction.transactionId
     );
 
+    // Derive amount and currency robustly
+    const amountCents = (session.amount_total != null)
+      ? session.amount_total
+      : (session.payment_intent?.amount || 0);
+    const sessionCurrency = (session.currency || session.payment_intent?.currency || 'usd').toUpperCase();
+
     return res.status(200).json({
       success: true,
       message: "Payment processed successfully",
       transaction: updatedTransaction,
+      amount: Number(amountCents) / 100,
+      currency: sessionCurrency,
     });
   } catch (error) {
     console.error("Error processing successful payment:", error);
@@ -268,11 +357,68 @@ const StripeWebhook = async (req, res) => {
 
       // If vouchers are bought via direct voucher API, finalize email sending here if metadata contains purchaseId
       const rawProducts = session.metadata?.productMetadata;
-      if (rawProducts) {
+      if (rawProducts && email) {
         try {
           const items = JSON.parse(rawProducts);
-          // No per-item purchaseId here; voucher fulfillment handled by existing flow
-        } catch (_) {}
+          for (const item of items) {
+            const productId = item.productId || "";
+            if (productId.startsWith("voucher-")) {
+              // Parse format: voucher-<Course>-<SubCourse>
+              const parts = productId.split("-");
+              const course = parts[1] || "";
+              const subCourse = parts.slice(2).join("-") || "";
+
+              // Allocate an available voucher atomically: findOneAndUpdate to avoid race
+              const voucher = await Voucher.findOneAndUpdate(
+                { course, subCourse, status: 'available' },
+                { $set: { status: 'sold', soldAt: new Date(), soldTo: { name: session.customer_details?.name || email, email } } },
+                { new: true }
+              );
+              if (!voucher) {
+                console.error(`No available voucher for ${course} ${subCourse}`);
+                continue;
+              }
+
+              const batch = await VoucherBatch.findOne({ batchId: voucher.batchId });
+              if (batch) {
+                batch.availableVouchers = Math.max(0, (batch.availableVouchers || 1) - 1);
+                batch.soldVouchers = (batch.soldVouchers || 0) + 1;
+                if (batch.availableVouchers === 0) batch.status = 'depleted';
+                await batch.save();
+              }
+
+              // Record voucher purchase
+              const purchaseId = `PURCHASE_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
+              const vp = new VoucherPurchase({
+                purchaseId,
+                voucherCode: voucher.voucherCode,
+                course,
+                subCourse,
+                customer: { name: session.customer_details?.name || email, email },
+                payment: { amount: Number(item.amount) || Number(session.amount_total/100) || 0, currency: (session.currency || 'usd').toUpperCase(), status: 'completed', stripePaymentIntentId: paymentIntentId }
+              });
+              await vp.save();
+
+              // Send email
+              try {
+                await sendVoucherEmail(email, {
+                  name: session.customer_details?.name || email,
+                  voucherCode: voucher.voucherCode,
+                  course,
+                  subCourse,
+                  purchaseId
+                });
+                vp.emailSent = true;
+                vp.emailSentAt = new Date();
+                await vp.save();
+              } catch (e) {
+                console.error('Voucher email send failed:', e.message);
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse product metadata for webhook:', e.message);
+        }
       }
     }
 
