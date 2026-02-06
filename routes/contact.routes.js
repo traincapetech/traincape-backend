@@ -154,31 +154,38 @@ contactRouter.post("/career-application", async (req, res) => {
       </html>
     `;
 
-    // Use Hostinger SMTP to send form data to HR
-    const smtpUser = process.env.EMAIL_USER;
-    const smtpPass = process.env.EMAIL_PASS;
-    if (!smtpUser || !smtpPass) {
-      console.error("EMAIL_USER or EMAIL_PASS not configured");
+    // Use Brevo HTTP API (works on Render - SMTP is blocked)
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    if (!brevoApiKey) {
+      console.error("BREVO_API_KEY not configured");
       return res.status(500).json({
         success: false,
         message: "Email service not configured. Please try again later.",
       });
     }
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.hostinger.com",
-      port: 465,
-      secure: true,
-      auth: { user: smtpUser, pass: smtpPass },
+    // Send via Brevo API
+    const brevoResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": brevoApiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "Traincape Careers", email: "hr@traincapetech.in" },
+        to: [{ email: "hr@traincapetech.in", name: "Traincape HR" }],
+        replyTo: { email: safeEmail, name: safeName },
+        subject: `📋 New Application: ${safePosition} — ${safeName}`,
+        htmlContent: htmlContent,
+      }),
     });
 
-    await transporter.sendMail({
-      from: smtpUser,
-      to: "hr@traincapetech.in",
-      replyTo: safeEmail,
-      subject: `📋 New Application: ${safePosition} — ${safeName}`,
-      html: htmlContent,
-    });
+    if (!brevoResponse.ok) {
+      const errorData = await brevoResponse.json();
+      console.error("Brevo API error:", errorData);
+      throw new Error("Failed to send email via Brevo");
+    }
 
     console.log(
       `Career application sent successfully: ${safeName} for ${safePosition}`,
