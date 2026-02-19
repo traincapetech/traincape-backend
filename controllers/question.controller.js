@@ -18,6 +18,16 @@ const addQuestion = async (req, res) => {
       foundCourse.subTopics.push(foundSubTopic);
     }
 
+    // Check for duplicate question (same questionText in same level)
+    if (['easy', 'intermediate', 'advanced'].includes(level)) {
+      const isDuplicate = foundSubTopic.levels[level].some(
+        q => q.questionText.trim().toLowerCase() === questionText.trim().toLowerCase()
+      );
+      if (isDuplicate) {
+        return res.status(409).json({ error: 'Duplicate question - already exists', questionText });
+      }
+    }
+
     const newQuestion = {
       questionText,
       options,
@@ -85,7 +95,7 @@ const updateQuestion = async (req, res) => {
   try {
     // Convert questionId to ObjectId
     const objectId = new mongoose.Types.ObjectId(questionId);
-    
+
     // Find the course containing the question
     const course = await Course.findOne({
       "subTopics.levels.easy._id": objectId,

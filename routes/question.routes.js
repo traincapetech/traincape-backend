@@ -57,12 +57,12 @@ questionRouter.get("/debug", async (req, res) => {
 questionRouter.get("/", async (req, res) => {
   try {
     const { course, subTopic, level } = req.query;
-    
+
     // If no parameters, return all courses
     if (!course && !subTopic && !level) {
       const allCourses = await QuestionModel.find({});
       const allQuestions = [];
-      
+
       allCourses.forEach(course => {
         course.subTopics.forEach(subTopic => {
           const levelsObj = subTopic.levels.toObject();
@@ -80,23 +80,23 @@ questionRouter.get("/", async (req, res) => {
           });
         });
       });
-      
+
       return res.status(200).json(allQuestions);
     }
-    
+
     // If course is specified, return questions for that course
     if (course && !subTopic) {
       const foundCourse = await QuestionModel.findOne({ name: { $regex: `^${escapeRegex(course)}$`, $options: "i" } });
       if (!foundCourse) {
         return res.status(200).json([]);
       }
-      
+
       const courseQuestions = [];
       foundCourse.subTopics.forEach(subTopic => {
         const levelsObj = subTopic.levels.toObject();
         Object.keys(levelsObj).forEach(level => {
           if (Array.isArray(levelsObj[level])) {
-                        levelsObj[level].forEach(question => {
+            levelsObj[level].forEach(question => {
               courseQuestions.push({
                 ...(question.toObject ? question.toObject() : question),
                 course: course,
@@ -107,45 +107,45 @@ questionRouter.get("/", async (req, res) => {
           }
         });
       });
-      
+
       return res.status(200).json(courseQuestions);
     }
-    
+
     // If course and subTopic are specified, filter by subTopic
     if (course && subTopic && !level) {
       const foundCourse = await QuestionModel.findOne({ name: course });
       if (!foundCourse) {
         return res.status(200).json([]);
       }
-      
+
       const subTopicQuestions = [];
       const matchedSubTopic = foundCourse.subTopics.find(sub => normalize(sub.name) === normalize(subTopic));
       if (matchedSubTopic) {
         const levelsObj = matchedSubTopic.levels.toObject();
         Object.keys(levelsObj).forEach(level => {
           if (Array.isArray(levelsObj[level])) {
-                          levelsObj[level].forEach(question => {
-                subTopicQuestions.push({
-                  ...(question.toObject ? question.toObject() : question),
-                  course: course,
-                  subTopic: subTopic,
-                  level: level
-                });
+            levelsObj[level].forEach(question => {
+              subTopicQuestions.push({
+                ...(question.toObject ? question.toObject() : question),
+                course: course,
+                subTopic: subTopic,
+                level: level
               });
+            });
           }
         });
       }
-      
+
       return res.status(200).json(subTopicQuestions);
     }
-    
+
     // If all parameters are specified, filter by level (case-insensitive)
     if (course && subTopic && level) {
       const foundCourse = await QuestionModel.findOne({ name: { $regex: `^${escapeRegex(course)}$`, $options: "i" } });
       if (!foundCourse) {
         return res.status(200).json([]);
       }
-      
+
       let matchedSubTopic = foundCourse.subTopics.find(sub => {
         if (normalize(sub.name) === normalize(subTopic)) return true;
         return normalizeLoose(sub.name) === normalizeLoose(subTopic);
@@ -156,24 +156,24 @@ questionRouter.get("/", async (req, res) => {
       if (!matchedSubTopic) {
         return res.status(200).json([]);
       }
-      
+
       const levelsObj = matchedSubTopic.levels.toObject();
       const requestedLevel = normalizeLevel(level);
       const levelKey = Object.keys(levelsObj).find((k) => k.toLowerCase() === requestedLevel);
       if (!levelKey || !Array.isArray(levelsObj[levelKey])) {
         return res.status(200).json([]);
       }
-      
+
       const levelQuestions = levelsObj[levelKey].map(question => ({
         ...(question.toObject ? question.toObject() : question),
         course: course,
         subTopic: subTopic,
         level: levelKey
       }));
-      
+
       return res.status(200).json(levelQuestions);
     }
-    
+
     res.status(200).json([]);
   } catch (error) {
     console.error("Error fetching questions:", error);
@@ -209,7 +209,7 @@ questionRouter.get("/getQuestions", async (req, res) => {
         console.log("[getQuestions] params:", { course, subTopic, level });
         console.log("[getQuestions] found courses:", questions.map(q => q.name));
       }
-    } catch (_) {}
+    } catch (_) { }
 
     questions.forEach((question) => {
       let subs = question.subTopics.filter((sub) => {
@@ -227,7 +227,7 @@ questionRouter.get("/getQuestions", async (req, res) => {
           if (process.env.NODE_ENV !== 'production') {
             console.log("[getQuestions] subtopic match:", sub.name, "level keys:", Object.keys(levelsObj));
           }
-        } catch (_) {}
+        } catch (_) { }
         if (requestedLevel) {
           const keyMatch = Object.keys(levelsObj).find((k) => k.toLowerCase() === requestedLevel);
           if (keyMatch && Array.isArray(levelsObj[keyMatch])) {
@@ -271,26 +271,44 @@ questionRouter.post("/addQuestion", async (req, res) => {
       foundCourse.subTopics.push(foundSubTopic);
     }
 
-    const newQuestion = {
-      questionText,
-      options,
-      correctAnswer,
-      _id: new mongoose.Types.ObjectId(),
-    };
-
     if (["easy", "intermediate", "advanced"].includes(level)) {
+      // Check for duplicates
+      const normalizedInput = questionText.trim();
+
+      console.log(`[AddQuestion] Checking duplicate for: "${normalizedInput.substring(0, 30)}..." in ${level} (${foundSubTopic.levels[level].length} existing)`);
+
+      const existingQuestion = foundSubTopic.levels[level].find(
+        (q) => q.questionText.trim() === normalizedInput
+      );
+
+      if (existingQuestion) {
+        console.log(`[AddQuestion] Duplicate found! ID: ${existingQuestion._id}`);
+        return res.status(200).json({
+          message: "Question already exists",
+          existingQuestion: existingQuestion
+        });
+      }
+
+      const newQuestion = {
+        questionText: normalizedInput,
+        options,
+        correctAnswer,
+        _id: new mongoose.Types.ObjectId(),
+      };
+
+      console.log(`[AddQuestion] No duplicate found. Adding new question.`);
       foundSubTopic.levels[level].push(newQuestion);
+      await foundCourse.save();
+
+      res
+        .status(201)
+        .json({ message: "Question added successfully", newQuestion });
     } else {
       return res.status(400).json({
         error:
           "Invalid level. Valid levels are easy, intermediate, and advanced.",
       });
     }
-    console.log("done");
-    await foundCourse.save();
-    res
-      .status(201)
-      .json({ message: "Question added successfully", newQuestion });
   } catch (err) {
     res
       .status(500)
@@ -395,7 +413,7 @@ questionRouter.put("/:questionId", async (req, res) => {
 
   try {
     const objectId = new mongoose.Types.ObjectId(questionId);
-    
+
     // Find the course that contains the question
     const course = await QuestionModel.findOne({
       $or: [

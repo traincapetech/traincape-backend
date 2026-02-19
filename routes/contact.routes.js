@@ -1,7 +1,7 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import Brevo from "@getbrevo/brevo";
+
 
 dotenv.config();
 

@@ -1,6 +1,7 @@
 import express from "express";
 import nodemailer from "nodemailer";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
+
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { UserModel } from "../model/user.model.js";

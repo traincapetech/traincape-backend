@@ -10,7 +10,7 @@ const addResult = async (req, res) => {
     // Validate the course and sub-topic
     const foundCourse = await Course.findOne({ name: course });
     if (!foundCourse) {
-      return res.status(404).json({ error: 'Course not found'});
+      return res.status(404).json({ error: 'Course not found' });
     }
 
     const foundSubTopic = foundCourse.subTopics.find(sub => sub.name === subTopic);
@@ -24,11 +24,11 @@ const addResult = async (req, res) => {
       return res.status(400).json({ error: 'Invalid level provided' });
     }
 
-    // Determine if the user should receive a certificate (assuming 70% score required)
-    const passingScore = 0.8 * totalQuestions; // 80% of the total questions
+    // Determine if the user should receive a certificate (70% score required)
+    const passingScore = 0.7 * totalQuestions; // 70% of the total questions
     const certificate = score >= passingScore;
 
-    const certificateId = uuidv4(); 
+    const certificateId = uuidv4();
 
     // const certificateUrl = `http://localhost:8080/results/verifyCertificate?certificateId=${certificateId}`;
 
