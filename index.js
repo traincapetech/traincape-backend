@@ -2,12 +2,15 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./db.js";
+import { createServer } from 'http';
+import { initSocket, setIO } from './socket/socketManager.js';
+
 
 // Routers
 import { userRouter } from "./routes/user.routes.js";
 import { reviewRouter } from "./routes/review.routes.js";
 import { bookRouter } from "./routes/book.routes.js";
-import { questionRouter } from "./routes/question.routes.js"; 
+import { questionRouter } from "./routes/question.routes.js";
 import { resultRouter } from "./routes/result.routes.js";
 import { paymentRouter } from "./routes/payment.routes.js";
 import { employeeRouter } from "./routes/employee.routes.js";
@@ -15,6 +18,9 @@ import certificateRouter from "./routes/certificate.routes.js";
 import voucherRouter from "./routes/voucher.routes.js";
 import { securityRouter } from "./routes/security.routes.js";
 import { contactRouter } from "./routes/contact.routes.js";
+import { requestHumanHandover } from "./controllers/chat.controller.js";
+import chatRouter from "./routes/chat.routes.js";
+import consultantRouter from "./routes/consultant.routes.js";
 
 dotenv.config();
 
@@ -32,16 +38,17 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       'https://traincapetech.in',
       'https://www.traincapetech.in',
       'http://localhost:3000',
       'http://localhost:5173',
       'http://localhost:3001',
-      'http://127.0.0.1:3000'
+      'http://127.0.0.1:3000',
+      'http://localhost:3006'
     ];
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -68,7 +75,7 @@ app.set('etag', false);
 app.use("/uploads", express.static("uploads"));
 
 // ✅ Routes
-app.use("/questions", questionRouter);  
+app.use("/questions", questionRouter);
 app.use("/employees", employeeRouter);
 app.use("/results", resultRouter);
 app.use("/users", userRouter);
@@ -79,6 +86,8 @@ app.use("/certificates", certificateRouter);
 app.use("/vouchers", voucherRouter);
 app.use("/security", securityRouter);
 app.use("/contact", contactRouter);
+app.use("/chat", chatRouter);
+app.use("/consultant", consultantRouter);
 
 // ✅ Home Endpoint
 app.get("/", (req, res) => {
@@ -90,10 +99,18 @@ app.get("/", (req, res) => {
 // ✅ Server Bootstrap
 const PORT = process.env.PORT || 3001;
 
+
+
+// ...
+
+const httpServer = createServer(app);
+const io = initSocket(httpServer);
+setIO(io);
+
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`Using FRONTEND_URL for payment redirects: ${process.env.FRONTEND_URL || 'Not set'}`);
     });

@@ -63,7 +63,9 @@ userRouter.post("/login", async (req, res) => {
   const authHeader = req.headers.authorization || "";
   if (authHeader.startsWith("Basic ")) {
     try {
-      const decoded = Buffer.from(authHeader.split(" ")[1], "base64").toString("utf8");
+      const decoded = Buffer.from(authHeader.split(" ")[1], "base64").toString(
+        "utf8",
+      );
       const [username, pass] = decoded.split(":");
       if (username && pass) {
         email = username;
@@ -84,7 +86,7 @@ userRouter.post("/login", async (req, res) => {
           .status(401)
           .send({ success: false, message: "Wrong Credentials" });
       }
-      
+
       // Check if SECRET_KEY is available
       if (!process.env.SECRET_KEY) {
         console.error("SECRET_KEY environment variable is not set!");
@@ -92,11 +94,11 @@ userRouter.post("/login", async (req, res) => {
           .status(500)
           .send({ success: false, message: "Server configuration error" });
       }
-      
+
       const token = jwt.sign(
         { userId: user._id, username: user.username, role: user.role },
         process.env.SECRET_KEY,
-        { expiresIn: "1h" }
+        { expiresIn: "1h" },
       );
       res.status(200).send({
         success: true,
@@ -116,15 +118,6 @@ userRouter.post("/login", async (req, res) => {
 });
 
 userRouter.post("/sendOTPToEmail", async (req, res) => {
-  const transporter = nodemailer.createTransport({
-    host: "smtp.hostinger.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
   const { email } = req.body;
   try {
     const user = await UserModel.findOne({ email });
@@ -137,13 +130,16 @@ userRouter.post("/sendOTPToEmail", async (req, res) => {
     user.verifyOtp = otp;
     user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
     await user.save();
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      // to: email,
-      subject: "Password Reset OTP",
-      html: `
-      <!-- Updated HTML template with image -->
+
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    if (!brevoApiKey) {
+      console.error("BREVO_API_KEY not configured");
+      return res
+        .status(500)
+        .json({ success: false, message: "Email service not configured" });
+    }
+
+    const htmlContent = `
 <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4;">
   <div style="max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
       <h2 style="color: #333;">OTP Verification</h2>
@@ -151,24 +147,37 @@ userRouter.post("/sendOTPToEmail", async (req, res) => {
       <div style="font-size: 24px; font-weight: bold; color: #333; padding: 10px 20px; background: #f8f8f8; border: 1px dashed #333; display: inline-block; margin: 10px 0;">
           ${otp}
       </div>
-      <p style="color: #777; font-size: 14px;">This OTP is valid for only 10 minutes. Do not share it with anyone.</p>
+      <p style="color: #777; font-size: 14px;">This OTP is valid for only 24 hours. Do not share it with anyone.</p>
       <p style="color: #777; font-size: 14px;">If you did not request this, please ignore this email.</p>
       <div style="font-size: 12px; color: #aaa; margin-top: 20px;">© 2025 TrainCape Industries</div>
   </div>
 </div>
-`,
-    };
+`;
 
-    // Use Promise for better async handling
-    transporter
-      .sendMail(mailOptions)
-      .then(() => {
-        return res.json({ success: true, message: "OTP sent successfully" });
-      })
-      .catch((error) => {
-        console.error(error);
-        return res.status(500).json({ message: "Error sending email" });
-      });
+    const brevoResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": brevoApiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "Traincape Technology", email: "hr@traincapetech.in" },
+        to: [{ email: email }],
+        subject: "Password Reset OTP",
+        htmlContent: htmlContent,
+      }),
+    });
+
+    if (!brevoResponse.ok) {
+      const errorData = await brevoResponse.json();
+      console.error("Brevo API error:", errorData);
+      return res
+        .status(500)
+        .json({ success: false, message: "Error sending email via Brevo" });
+    }
+
+    return res.json({ success: true, message: "OTP sent successfully" });
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: "Internal Server Error" });
@@ -206,8 +215,8 @@ userRouter.post("/reset_password", async (req, res) => {
       return res.status(400).send({ msg: "Wrong Credentials" });
     }
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    console.log("Hashed Password is",hashedPassword);
-    console.log("User Password is",user.password);
+    console.log("Hashed Password is", hashedPassword);
+    console.log("User Password is", user.password);
     user.password = hashedPassword;
     user.resetOtp = "";
     user.resetOtpExpireAt = 0;
@@ -225,7 +234,10 @@ userRouter.post("/reset_password", async (req, res) => {
 // Get all users (for admin dashboard)
 userRouter.get("/", async (req, res) => {
   try {
-    const users = await UserModel.find({}, { password: 0, verifyOtp: 0, verifyOtpExpireAt: 0 });
+    const users = await UserModel.find(
+      {},
+      { password: 0, verifyOtp: 0, verifyOtpExpireAt: 0 },
+    );
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -234,13 +246,13 @@ userRouter.get("/", async (req, res) => {
 });
 
 userRouter.get("/details", async (req, res) => {
-  const useremail="ishaanj2612@gmail.com"
+  const useremail = "ishaanj2612@gmail.com";
   try {
-    const user = await UserModel.findOne({ email:useremail });
+    const user = await UserModel.findOne({ email: useremail });
     if (!user) {
       return res.status(400).send({ msg: "Wrong Credentials" });
     }
-  
+
     res.status(200).send(user);
   } catch (error) {
     console.error(error);

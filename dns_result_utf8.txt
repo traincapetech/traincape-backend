@@ -1,0 +1,18 @@
+﻿Server:  dns.google
+Address:  8.8.8.8
+
+_mongodb._tcp.traincapetechnology.1p6rbwq.mongodb.net	SRV service location:
+	  priority       = 0
+	  weight         = 0
+	  port           = 27017
+	  svr hostname   = ac-butgdfx-shard-00-00.1p6rbwq.mongodb.net
+_mongodb._tcp.traincapetechnology.1p6rbwq.mongodb.net	SRV service location:
+	  priority       = 0
+	  weight         = 0
+	  port           = 27017
+	  svr hostname   = ac-butgdfx-shard-00-02.1p6rbwq.mongodb.net
+_mongodb._tcp.traincapetechnology.1p6rbwq.mongodb.net	SRV service location:
+	  priority       = 0
+	  weight         = 0
+	  port           = 27017
+	  svr hostname   = ac-butgdfx-shard-00-01.1p6rbwq.mongodb.net

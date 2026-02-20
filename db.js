@@ -2,14 +2,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import dns from "dns";
 
-dotenv.config();
-
-// Fix for ECONNREFUSED on some networks by forcing Google DNS
-try {
-  dns.setServers(['8.8.8.8']);
-} catch (error) {
-  console.warn("Could not set DNS servers:", error);
-}
+// Force IPv4 and set DNS resolution order to help with SRV record lookups
+dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
 
@@ -21,13 +15,30 @@ const connectDB = async () => {
       throw new Error("MongoDB URI is not defined in environment variables. Please set MongoDBURI or MONGO_URI.");
     }
 
+    console.log("Attempting to connect to MongoDB...");
+
+    // Enhanced connection options to handle DNS and connection issues
     const conn = await mongoose.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000, // Timeout after 10s instead of 30s
+      socketTimeoutMS: 45000,
+      family: 4, // Use IPv4, skip trying IPv6
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error(`❌ MongoDB Connection Error: ${error.message}`);
+
+    // Provide helpful diagnostics
+    if (error.message.includes('querySrv') || error.message.includes('ECONNREFUSED')) {
+      console.error("\n🔍 DNS/Network Issue Detected:");
+      console.error("  - Check your internet connection");
+      console.error("  - Verify MongoDB Atlas cluster is running");
+      console.error("  - Check if your IP is whitelisted in MongoDB Atlas");
+      console.error("  - Try using a standard connection string instead of SRV format");
+    }
+
     process.exit(1);
   }
 };
