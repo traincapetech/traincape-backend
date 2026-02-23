@@ -78,17 +78,4 @@ router.get("/my-sessions", verifyConsultant, async (req, res) => {
     }
 });
 
-// Update FCM Token
-router.post("/fcm-token", verifyConsultant, async (req, res) => {
-    try {
-        const { fcmToken } = req.body;
-        if (!fcmToken) return res.status(400).json({ message: "Token is required" });
-
-        await Consultant.findByIdAndUpdate(req.consultant._id, { fcmToken });
-        res.json({ success: true, message: "FCM Token updated" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
 export default router;

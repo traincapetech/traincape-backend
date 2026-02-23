@@ -5,8 +5,7 @@ const consultantSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   isOnline: { type: Boolean, default: false },
-  activeToken: { type: String, default: null }, // null = free, string = busy
-  fcmToken: { type: String, default: null }
+  activeToken: { type: String, default: null } // null = free, string = busy
 });
 
 export default mongoose.model('Consultant', consultantSchema);
