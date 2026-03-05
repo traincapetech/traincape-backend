@@ -21,6 +21,7 @@ import { contactRouter } from "./routes/contact.routes.js";
 import { requestHumanHandover } from "./controllers/chat.controller.js";
 import chatRouter from "./routes/chat.routes.js";
 import consultantRouter from "./routes/consultant.routes.js";
+import internRouter from "./routes/intern.routes.js";
 
 dotenv.config();
 
@@ -88,6 +89,7 @@ app.use("/security", securityRouter);
 app.use("/contact", contactRouter);
 app.use("/chat", chatRouter);
 app.use("/consultant", consultantRouter);
+app.use("/interns", internRouter);
 
 // ✅ Home Endpoint
 app.get("/", (req, res) => {

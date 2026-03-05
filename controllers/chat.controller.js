@@ -4,6 +4,7 @@ import { getIO } from '../socket/socketManager.js';
 
 export const requestHumanHandover = async (req, res) => {
   try {
+    const { clientName } = req.body;
     const sessionToken = `live_${Date.now()}`;
     const io = getIO();
 
@@ -30,7 +31,8 @@ export const requestHumanHandover = async (req, res) => {
     const newSession = await ChatSession.create({
       token: sessionToken,
       status: status,
-      consultantName: consultantName
+      consultantName: consultantName,
+      clientName: clientName || 'Guest'
     });
 
     if (io) {
