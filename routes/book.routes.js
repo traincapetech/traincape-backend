@@ -1,6 +1,10 @@
 import express from "express";
 import { BookModel } from "../model/book.model.js";
 import { getAllBooks } from "../controllers/book.controller.js";
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+
 const bookRouter = express.Router();
 
 bookRouter.get("/get-books", getAllBooks);
