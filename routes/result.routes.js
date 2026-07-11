@@ -125,11 +125,13 @@ resultRouter.get('/verifyCertificate', async (req, res) => {
           certificateId: cert.certificateId,
           certificate: true,
           createdAt: cert.issueDate,
-          issuedBy: cert.issuedBy,
+          issueDate: cert.issueDate,
+          issuedBy: cert.issuedBy || 'Traincape Technology',
           certificateURL: cert.certificateURL || '',
           score: null,
           totalQuestions: null,
           level: 'Professional',
+          isAdminCert: true,
         },
       });
     }
