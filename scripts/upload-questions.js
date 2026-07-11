@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 
 const ENV = (process.argv[2] || 'local').toLowerCase();
 const BASE_URL = ENV === 'prod'
-    ? 'https://traincape-backend-1.onrender.com'
+    ? 'https://traincape-backend-uwoa.onrender.com'
     : 'http://localhost:8080';
 
 const API = `${BASE_URL}/questions/addQuestion`;

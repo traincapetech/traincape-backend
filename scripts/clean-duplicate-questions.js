@@ -9,7 +9,7 @@ import axios from 'axios';
 
 const ENV = (process.argv[2] || 'local').toLowerCase();
 const BASE_URL = ENV === 'prod'
-    ? 'https://traincape-backend-1.onrender.com'
+    ? 'https://traincape-backend-uwoa.onrender.com'
     : 'http://localhost:8080';
 
 // Courses to clean - add more entries if needed

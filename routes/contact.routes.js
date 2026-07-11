@@ -1,3 +1,4 @@
+
 import express from "express";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
@@ -153,38 +154,35 @@ contactRouter.post("/career-application", async (req, res) => {
       </html>
     `;
 
-    // Use Brevo HTTP API (works on Render - SMTP is blocked)
-    const brevoApiKey = process.env.BREVO_API_KEY;
-    if (!brevoApiKey) {
-      console.error("BREVO_API_KEY not configured");
+    // Use Hostinger SMTP to send form data to HR (family: 4 forces IPv4, which works on Render)
+    const smtpUser = process.env.EMAIL_USER;
+    const smtpPass = process.env.EMAIL_PASS;
+    if (!smtpUser || !smtpPass) {
+      console.error("EMAIL_USER or EMAIL_PASS not configured");
       return res.status(500).json({
         success: false,
         message: "Email service not configured. Please try again later.",
       });
     }
 
-    // Send via Brevo API
-    const brevoResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "api-key": brevoApiKey,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        sender: { name: "Traincape Careers", email: "hr@traincapetech.in" },
-        to: [{ email: "hr@traincapetech.in", name: "Traincape HR" }],
-        replyTo: { email: safeEmail, name: safeName },
-        subject: `📋 New Application: ${safePosition} — ${safeName}`,
-        htmlContent: htmlContent,
-      }),
+    const transporter = nodemailer.createTransport({
+      host: "smtp.hostinger.com",
+      port: 465,
+      secure: true,
+      family: 4, // Force IPv4 — Render's IPv6 routing to Hostinger is blocked
+      auth: { user: smtpUser, pass: smtpPass },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
-    if (!brevoResponse.ok) {
-      const errorData = await brevoResponse.json();
-      console.error("Brevo API error:", errorData);
-      throw new Error("Failed to send email via Brevo");
-    }
+    await transporter.sendMail({
+      from: `"${smtpUser}" <${smtpUser}>`,
+      to: "hr@traincapetech.in",
+      replyTo: safeEmail,
+      subject: `📋 New Application: ${safePosition} — ${safeName}`,
+      html: htmlContent,
+    });
 
     console.log(
       `Career application sent successfully: ${safeName} for ${safePosition}`,
@@ -236,39 +234,7 @@ contactRouter.post("/lead", async (req, res) => {
       });
     }
 
-    const smtpUser = process.env.EMAIL_USER;
-    const smtpPass = process.env.EMAIL_PASS;
-    if (!smtpUser || !smtpPass) {
-      return res.status(500).json({
-        success: false,
-        message: "Server email is not configured. Please try again later.",
-      });
-    }
-
-    const toEmail =
-      process.env.CONTACT_RECEIVER_EMAIL || "sales@traincapetech.in";
-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.hostinger.com",
-      port: 465,
-      secure: true,
-      auth: { user: smtpUser, pass: smtpPass },
-    });
-
     const safe = (v) => String(v || "").trim();
-    const text = [
-      `New website lead`,
-      ``,
-      `Name: ${safe(name)}`,
-      `Email: ${safe(email)}`,
-      `Phone / WhatsApp: ${safe(phoneNumber)}`,
-      `Country: ${safe(location)}`,
-      `Service / Course: ${safe(subject)}`,
-      ``,
-      `Message:`,
-      safe(message),
-    ].join("\n");
-
     const html = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
         <h2 style="margin: 0 0 12px;">New Website Lead</h2>
@@ -286,15 +252,38 @@ contactRouter.post("/lead", async (req, res) => {
       </div>
     `;
 
+    const smtpUser = process.env.EMAIL_USER;
+    const smtpPass = process.env.EMAIL_PASS;
+    if (!smtpUser || !smtpPass) {
+      console.error("EMAIL_USER or EMAIL_PASS not configured");
+      return res.status(500).json({
+        success: false,
+        message: "Server email is not configured. Please try again later.",
+      });
+    }
+
+    const toEmail = process.env.CONTACT_RECEIVER_EMAIL || "sales@traincapetech.in";
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.hostinger.com",
+      port: 465,
+      secure: true,
+      family: 4, // Force IPv4 — Render's IPv6 routing to Hostinger is blocked
+      auth: { user: smtpUser, pass: smtpPass },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
     await transporter.sendMail({
-      from: smtpUser,
+      from: `"${smtpUser}" <${smtpUser}>`,
       to: toEmail,
       replyTo: safe(email),
       subject: `New Lead: ${safe(subject)} — ${safe(name)}`,
-      text,
-      html,
+      html: html,
     });
 
+    console.log(`Lead form submitted successfully for: ${safe(name)}`);
     return res.json({
       success: true,
       message: "Thanks! We’ll get back to you shortly.",
